@@ -117,11 +117,11 @@ fn init_config() -> Result<(), Box<dyn Error>> {
 
     let template = r#"
 [[profile]]
-name = "click"
+name = "sample click"
 interval = 1
-button = "left"
+button = "Left"
 repeat = 1
-mode = "click"
+mode = "Click"
 "#;
 
     fs::write(&config_file, template)?;
