@@ -3,7 +3,7 @@ a *lazy* autoclicker for unix systems that support multiple profiles and holding
 this is the second version of the autoclicker i made a while ago: [herehere](https://github.com/lunar1um/auto-clicker)  
 
 #### expectations
-i have only tested on arch linux, no idea about other os, but they should work!!  
+i have only tested on arch linux, no idea about other distro, but they should work!!  
 also i tested global keybinds on hyprland, so it varies for your wm / compositor too!!!  
 
 #### features
