@@ -2,7 +2,7 @@ use clap::{Parser, Subcommand};
 
 #[derive(Parser)]
 #[command(name = "lazyclicker")]
-#[command(about = "lazy autoclicker or holder", version, author)]
+#[command(about = "fast auto clicker cli tool that works!!", version, author)]
 pub struct Cli {
     #[command(subcommand)]
     pub command: Commands,
@@ -27,4 +27,8 @@ pub enum Commands {
 
     /// List all available profiles
     List,
+
+    /// Edit the config file
+    Config,
 }
+

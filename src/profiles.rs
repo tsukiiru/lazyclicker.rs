@@ -29,22 +29,44 @@ impl Config {
     pub fn load() -> Result<Self, Box<dyn Error>> {
         let config_path = dirs::config_dir()
             .unwrap_or_default()
-            .join("lazyclicker/profiles.toml");
+            .join("lazyclicker/config.toml");
 
         let contents = fs::read_to_string(config_path)?;
         let config = toml::from_str(&contents)?;
         Ok(config)
     }
 
-    // create the main folder
+    // create the main folder, returns path if already exists
     pub fn path() -> Result<PathBuf, Box<dyn Error>> {
         let config_path = dirs::config_dir().unwrap_or_default().join("lazyclicker");
 
-        if config_path.exists() {
-            return Ok(config_path);
+        if !config_path.exists() {
+            fs::create_dir_all(&config_path)?;
         }
 
-        fs::create_dir_all(&config_path)?;
         Ok(config_path)
+    }
+
+    pub fn init() -> Result<(), Box<dyn Error>> {
+        let config_file = Config::path()?.join("config.toml");
+        let template = r#"
+[[profile]]
+name = "sample click"
+interval = 1
+button = "Left"
+repeat = 1
+mode = "Click"
+"#;
+
+        if config_file.exists() {
+            println!("config file already exists at: {}", config_file.display());
+            return Ok(());
+        }
+
+        fs::write(&config_file, template)?;
+
+        println!("config file created at: {}", config_file.display());
+
+        Ok(())
     }
 }

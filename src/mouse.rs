@@ -23,7 +23,6 @@ impl MouseButton {
 
 impl MouseDevice {
     pub fn new() -> Result<Self, Box<dyn Error>> {
-        // funky permission issues when using uinput
         let device = uinput::open("/dev/uinput")?
             .name("rust-virtual-mouse")?
             .event(Mouse::Left)?

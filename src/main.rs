@@ -1,30 +1,31 @@
-use std::{
-    env,
-    error::Error,
-    fs,
-    process::{Command, Stdio},
-    thread::sleep,
-    time::Duration,
-};
+use std::{env, error::Error, process::Command, thread::sleep, time::Duration};
 
 use clap::Parser;
 use commands::{Cli, Commands};
 use mouse::{MouseButton, MouseDevice};
-use nix::{
-    sys::signal::{Signal, kill},
-    unistd::Pid,
-};
 use profiles::{Config, Mode};
 
 mod commands;
 mod mouse;
+mod process;
 mod profiles;
 
 fn main() -> Result<(), Box<dyn Error>> {
     let arguments = Cli::parse();
 
     match arguments.command {
-        Commands::Init => init_config(),
+        Commands::Init => Config::init(),
+
+        Commands::Config => {
+            let editor = env::var("EDITOR").unwrap_or("nvim".to_string());
+            // nvim is superior :3
+            let config_path = Config::path()?.join("profiles.toml");
+
+            Command::new(editor).arg(config_path).spawn()?.wait()?;
+
+            Ok(())
+        }
+
         Commands::List => {
             let config = Config::load()?;
 
@@ -53,6 +54,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
             Ok(())
         }
+
         Commands::Start { name, __run } => {
             let config = Config::load()?;
 
@@ -91,7 +93,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                         }
                     }
                 } else {
-                    spawn(&profile.name)?;
+                    process::spawn(&profile.name)?;
                 }
             } else {
                 eprintln!("profile not found: {}", name);
@@ -99,89 +101,10 @@ fn main() -> Result<(), Box<dyn Error>> {
 
             Ok(())
         }
+
         Commands::Stop { name } => {
-            stop(&name)?;
+            process::stop(&name)?;
             Ok(())
         }
     }
-}
-
-fn init_config() -> Result<(), Box<dyn Error>> {
-    let config_path = Config::path()?;
-    let config_file = config_path.join("profiles.toml");
-
-    if config_file.exists() {
-        println!("Config already exists at: {}", config_file.display());
-        return Ok(());
-    }
-
-    let template = r#"
-[[profile]]
-name = "sample click"
-interval = 1
-button = "Left"
-repeat = 1
-mode = "Click"
-"#;
-
-    fs::write(&config_file, template)?;
-
-    println!("Config file created at: {}", config_file.display());
-
-    Ok(())
-}
-
-fn spawn(profile: &str) -> Result<(), Box<dyn Error>> {
-    let config_path = Config::path()?;
-    let pid_path = config_path.join(".pids");
-    fs::create_dir_all(&pid_path)?;
-
-    let pid_file = pid_path.join(format!("{}.pid", profile));
-
-    if pid_file.exists() {
-        eprintln!("autoclicker: {}, is already running", profile);
-        return Ok(());
-    }
-
-    let command = Command::new(env::current_exe()?)
-        .arg("start")
-        .arg(&profile)
-        .arg("--run")
-        .stdin(Stdio::null())
-        .stdout(Stdio::null())
-        .stderr(Stdio::null())
-        .spawn()?;
-
-    fs::write(&pid_file, command.id().to_string())?;
-    println!("started autoclicker for: {}", profile);
-
-    Ok(())
-}
-
-fn stop(profile: &str) -> Result<(), Box<dyn Error>> {
-    let pid_file = Config::path()?
-        .join(".pids")
-        .join(format!("{}.pid", profile));
-
-    if !pid_file.exists() {
-        println!("no autoclicker running for: {}", profile);
-        return Ok(());
-    }
-
-    let pid = fs::read_to_string(&pid_file)?.trim().parse::<u32>()?;
-
-    let result = kill(Pid::from_raw(pid as i32), Signal::SIGTERM);
-    match result {
-        Ok(_) => {}
-        Err(nix::Error::ESRCH) => {
-            println!("no running process found for: {}", profile);
-        }
-        Err(e) => return Err(Box::new(e)),
-    }
-
-    fs::remove_file(pid_file)?;
-
-    println!("stopped process: {}", profile);
-
-    Ok(())
 }
