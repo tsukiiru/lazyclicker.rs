@@ -27,7 +27,7 @@ global keybinds should work, if you can bind the cli commands to the keybinds sy
 
 as this uses [toml](https://toml.io/) as the configuration language, so it's super easy to configure!!
 
-Example `profiles.toml`:
+Example `config.toml`:
 
 ```toml
 [[profile]]

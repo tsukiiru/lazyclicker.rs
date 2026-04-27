@@ -19,7 +19,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         Commands::Config => {
             let editor = env::var("EDITOR").unwrap_or("nvim".to_string());
             // nvim is superior :3
-            let config_path = Config::path()?.join("profiles.toml");
+            let config_path = Config::path()?.join("config.toml");
 
             Command::new(editor).arg(config_path).spawn()?.wait()?;
 
